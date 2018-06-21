@@ -3,3 +3,4 @@
 ## [bean的作用域和生命周期](https://github.com/zenwei4ge/spring/blob/master/bean%E7%9A%84%E4%BD%9C%E7%94%A8%E5%9F%9F%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
 ## [自动装配注入](https://github.com/zenwei4ge/spring/blob/master/%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E6%B3%A8%E5%85%A5)
 ## [创建bean](https://github.com/zenwei4ge/spring/blob/master/%E5%88%9B%E5%BB%BAbean)
+## [协调作用域不同步bean](https://github.com/zenwei4ge/spring/blob/master/%E5%8D%8F%E8%B0%83%E4%BD%9C%E7%94%A8%E5%9F%9F%E4%B8%8D%E5%90%8C%E6%AD%A5%E7%9A%84bean)

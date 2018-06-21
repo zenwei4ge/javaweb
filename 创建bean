@@ -1,0 +1,71 @@
+一：调用构造方法创建Bean
+1：Bean实例实现类 Person.java
+
+package com.mao.gouzao;
+
+public class Person 
+{
+	private String name;
+
+	public Person() 
+	{
+		System.out.println("Spring容器开始通过无参构造器创建Bean实例------------");
+	}
+	//Spring容器通过setter方法为参数注入值
+	public void setName(String name) 
+	{
+		this.name = name;
+	}
+	public void input()
+	{
+		System.out.println("欢迎来到我的博客："+name);
+	}
+
+}
+
+因为是通过构造函数创建Bean，因此我们需要提供无参数构造函数，另外我们定义了一个name属性，并提供了setter方法，Spring容器通过该方法为name属性注入参数。
+2：配置文件beans.xml
+
+<?xml version="1.0" encoding="GBK"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.springframework.org/schema/beans"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+	<!-- 指定class属性，通过构造方法创建Bean实例 -->
+	<bean id="person" class="com.mao.gouzao.Person">
+	  <!-- 通过调用setName方法，将VipMao作为参数传入 -->
+	  <property name="name" value="VipMao"></property>
+	</bean>
+</beans>
+配置文件中，通过<bean>元素的id属性指定该bean的唯一名称，class属性指定该bean的实现类，可以理解成Spring容器就是通过该实现类new了一个Bean。通过<property>标签的name属性和value属性指定了：调用setName方法，将VipMao作为参数注入。
+3：测试类 PersonTest.java
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class PersonTest 
+{
+	public static void main(String[]args)
+	{
+		//创建Spring容器
+		ApplicationContext ctx=new ClassPathXmlApplicationContext("beans.xml");
+		//通过getBean()方法获取Bean实例
+		Person person=(Person) ctx.getBean("person");
+		person.input();
+	}
+}
+
+
+
+
+
+二：调用静态工厂方法创建Bean
+  通过静态工厂创建Bean，是不是听着高大上了？顾名思义，咱们把创建Bean的任务交给了静态工厂，而不是构造函数，这个静态工厂就是一个Java类，那么使用静态工厂创建Bean咱们又需要添加哪些属性呢？我们同样需要在<bean/>元素内添加class属性，上面也说了，静态工厂是一个Java类，那么该class属性指定的就是该工厂的实现类，而不再是Bean的实现类，告诉Spring这个Bean应该由哪个静态工厂创建，另外我们还需要添加factory-method属性来指定由工厂的哪个方法来创建Bean实例，因此使用静态工厂方法创建Bean实例需要为<bean/>元素指定如下属性：
+class：指定静态工厂的实现类，告诉Spring该Bean实例应该由哪个静态工厂创建（指定工厂地址）
+factory-method:指定由静态工厂的哪个方法创建该Bean实例（指定由工厂的哪个车间创建Bean）
+如果静态工厂方法需要参数，则使用<constructor-arg.../>元素传入
+
+三：调用实例工厂方法创建Bean
+  首先咱们再顾名思义一下哈，静态工厂通过class指定静态工厂实现类然后通过相应的方法创建即可，调用实例工厂则需要先创建该工厂的Bean实例，然后引用该实例工厂Bean的id创建其他Bean，在实例工厂中通过factory-bean指定工厂Bean的实例，在调用实例化工厂方法中，不用在<bean/>中指定class属性，因为这时，咱们不用直接实例化该Bean，而是通过调用实例化工厂的方法，创建Bean实例，调用实例化工厂需要为<bean/>指定一下两个属性
+factory-bean ：该属性指定工厂Bean的id
+factory-method：该属性指定实例工厂的工厂方法。

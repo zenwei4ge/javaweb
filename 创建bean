@@ -64,8 +64,44 @@ public class PersonTest
 class：指定静态工厂的实现类，告诉Spring该Bean实例应该由哪个静态工厂创建（指定工厂地址）
 factory-method:指定由静态工厂的哪个方法创建该Bean实例（指定由工厂的哪个车间创建Bean）
 如果静态工厂方法需要参数，则使用<constructor-arg.../>元素传入
+<?xml version="1.0" encoding="GBK"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.springframework.org/schema/beans"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+        <!-- 定义chinese Bean 由PersonFactory工厂的getPerson方法创建 -->
+	<bean id="chinese" class="com.mao.staticFactory.PersonFactory" factory-method="getPerson">
+	  <!-- 为静态工厂的getPerson()方法传参 -->
+	  <constructor-arg value="chinese"/>
+	  <!-- 调用setMsg()方法为msg属性注入参数值 -->
+	  <property name="msg" value="我是中国人"/>
+	</bean>	
+	<!-- 创建american Bean -->
+	<bean id="american" class="com.mao.staticFactory.PersonFactory" factory-method="getPerson">
+	  <constructor-arg value="american"/>
+	  <property name="msg" value="我是美国人"></property>
+       </bean>
+</beans>
 
 三：调用实例工厂方法创建Bean
   首先咱们再顾名思义一下哈，静态工厂通过class指定静态工厂实现类然后通过相应的方法创建即可，调用实例工厂则需要先创建该工厂的Bean实例，然后引用该实例工厂Bean的id创建其他Bean，在实例工厂中通过factory-bean指定工厂Bean的实例，在调用实例化工厂方法中，不用在<bean/>中指定class属性，因为这时，咱们不用直接实例化该Bean，而是通过调用实例化工厂的方法，创建Bean实例，调用实例化工厂需要为<bean/>指定一下两个属性
 factory-bean ：该属性指定工厂Bean的id
 factory-method：该属性指定实例工厂的工厂方法。
+<?xml version="1.0" encoding="GBK"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.springframework.org/schema/beans"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+        <!-- 配置工厂Bean，class指定该工厂的实现类，该Bean负责产生其他Bean实例 -->
+	<bean id="personFactory" class="com.mao.instanceFactory.PersonFactory"/>
+	<!-- 由实例工厂Bean的getPerson()方法，创建Chinese Bean， -->
+	<bean id="ch" factory-bean="personFactory" factory-method="getPerson">
+	  <!-- 为该方法传入参数为chinese -->
+	  <constructor-arg value="chinese"/>
+	</bean>
+	<!-- 由实例工厂Bean的getPerson()方法，创建American Bean， -->
+	<bean id="usa" factory-bean="personFactory" factory-method="getPerson">
+	  <constructor-arg value="american"></constructor-arg>
+	</bean>
+</beans>
+

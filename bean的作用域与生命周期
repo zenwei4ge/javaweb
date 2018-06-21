@@ -1,0 +1,87 @@
+　五种作用域中，request、session和global session三种作用域仅在基于web的应用中使用（不必关心你所采用的是什么web应用框架），只能用在基于web的Spring ApplicationContext环境。
+
+　　(1)当一个bean的作用域为Singleton，那么Spring IoC容器中只会存在一个共享的bean实例，并且所有对bean的请求，只要id与该bean定义相匹配，则只会返回bean的同一实例。Singleton是单例类型，就是在创建起容器时就同时自动创建了一个bean的对象，不管你是否使用，他都存在了，每次获取到的对象都是同一个对象。注意，Singleton作用域是Spring中的缺省作用域。要在XML中将bean定义成singleton，可以这样配置：
+
+<bean id="ServiceImpl" class="cn.csdn.service.ServiceImpl" scope="singleton">
+　　(2)当一个bean的作用域为Prototype，表示一个bean定义对应多个对象实例。Prototype作用域的bean会导致在每次对该bean请求（将其注入到另一个bean中，或者以程序的方式调用容器的getBean()方法）时都会创建一个新的bean实例。Prototype是原型类型，它在我们创建容器的时候并没有实例化，而是当我们获取bean的时候才会去创建一个对象，而且我们每次获取到的对象都不是同一个对象。根据经验，对有状态的bean应该使用prototype作用域，而对无状态的bean则应该使用singleton作用域。在XML中将bean定义成prototype，可以这样配置：
+
+<bean id="account" class="com.foo.DefaultAccount" scope="prototype"/>  
+ 或者
+<bean id="account" class="com.foo.DefaultAccount" singleton="false"/> 
+　　(3)当一个bean的作用域为Request，表示在一次HTTP请求中，一个bean定义对应一个实例；即每个HTTP请求都会有各自的bean实例，它们依据某个bean定义创建而成。该作用域仅在基于web的Spring ApplicationContext情形下有效。考虑下面bean定义：
+
+<bean id="loginAction" class=cn.csdn.LoginAction" scope="request"/>
+　　针对每次HTTP请求，Spring容器会根据loginAction bean的定义创建一个全新的LoginAction bean实例，且该loginAction bean实例仅在当前HTTP request内有效，因此可以根据需要放心的更改所建实例的内部状态，而其他请求中根据loginAction bean定义创建的实例，将不会看到这些特定于某个请求的状态变化。当处理请求结束，request作用域的bean实例将被销毁。
+
+　　(4)当一个bean的作用域为Session，表示在一个HTTP Session中，一个bean定义对应一个实例。该作用域仅在基于web的Spring ApplicationContext情形下有效。考虑下面bean定义：
+
+<bean id="userPreferences" class="com.foo.UserPreferences" scope="session"/>
+　　针对某个HTTP Session，Spring容器会根据userPreferences bean定义创建一个全新的userPreferences bean实例，且该userPreferences bean仅在当前HTTP Session内有效。与request作用域一样，可以根据需要放心的更改所创建实例的内部状态，而别的HTTP Session中根据userPreferences创建的实例，将不会看到这些特定于某个HTTP Session的状态变化。当HTTP Session最终被废弃的时候，在该HTTP Session作用域内的bean也会被废弃掉。
+
+　　(5)当一个bean的作用域为Global Session，表示在一个全局的HTTP Session中，一个bean定义对应一个实例。典型情况下，仅在使用portlet context的时候有效。该作用域仅在基于web的Spring ApplicationContext情形下有效。考虑下面bean定义：
+
+<bean id="user" class="com.foo.Preferences "scope="globalSession"/>
+　　global session作用域类似于标准的HTTP Session作用域，不过仅仅在基于portlet的web应用中才有意义。Portlet规范定义了全局Session的概念，它被所有构成某个portlet web应用的各种不同的portlet所共享。在global session作用域中定义的bean被限定于全局portlet Session的生命周期范围内。
+  
+  
+  
+2、bean的生命周期
+  2.1 单例管理的对象
+      Spring在读取xml文件的时候，就会创建对象。在创建对象的时候先调用构造器，然后调用init-method属性值中所指定的方法。对象在被销毁的时候，会调用destroy-method属性值中所指定的方法，我们可以指定Bean节点的lazy-init=”true”来延迟初始化bean，第一次获取bean时才会初始化bean
+public class LifeBean {
+    private String name;  
+
+    public LifeBean(){  
+        System.out.println("LifeBean()构造函数");  
+    }  
+    public String getName() {  
+        return name;  
+    }  
+
+    public void setName(String name) {  
+        System.out.println("setName()");  
+        this.name = name;  
+    }  
+
+    public void init(){  
+        System.out.println("this is init of lifeBean");  
+    }  
+
+    public void destory(){  
+        System.out.println("this is destory of lifeBean " + this);  
+    }  
+}
+　　life.xml配置如下：
+
+<bean id="life_singleton" class="com.bean.LifeBean" scope="singleton" 
+            init-method="init" destroy-method="destory" lazy-init="true"/>
+　　测试代码如下：
+
+public class LifeTest {
+    @Test 
+    public void test() {
+        AbstractApplicationContext container = 
+        new ClassPathXmlApplicationContext("life.xml");
+        LifeBean life1 = (LifeBean)container.getBean("life");
+        System.out.println(life1);
+        container.close();
+    }
+}
+　　运行结果如下：
+
+LifeBean()构造函数
+this is init of lifeBean
+com.bean.LifeBean@573f2bb1
+……
+this is destory of lifeBean com.bean.LifeBean@573f2bb1
+
+
+
+2.2 非单例管理的对象
+scope=”prototype”时，容器也会延迟初始化bean，Spring读取xml文件的时候，并不会立刻创建对象，第一次请求该bean时才初始化
+然后调用init-method属性值中所指定的方法
+对象销毁的时候，Spring容器不会帮我们调用任何方法
+bean的scope设为prototype时，当容器关闭时，destroy方法不会被调用
+让Spring容器释放被prototype作用域bean占用资源的一种可行方式是，通过使用bean的后置处理器，该处理器持有要被清除的bean的引用
+
+

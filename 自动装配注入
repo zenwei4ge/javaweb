@@ -1,0 +1,50 @@
+1. byName规则
+          byName规则是指setter方法的方法名与Bean的id进行匹配，假如Bean A的实现类包含setB()方法，而Spring配置文件恰好包含id为b的Bean，则Spring容器会将b实例注入Bean A中。如果容器中没有名字匹配的Bean，Spring则不会做任何事情。
+
+         <?xml version="1.0" encoding="GBK"?>
+        <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://www.springframework.org/schema/beans"
+          xsi:schemaLocation="http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+          <!-- 指定使用byName策略，Spring会根据setter方法的方法名与Bean的id进行匹配 -->
+          <bean id="chinese" class="com.owen.app.service.impl.Chinese"
+            autowire="byName"/>
+          <bean id="gunDog" class="com.owen.app.service.impl.GunDog">
+            <property name="name" value="wangwang"/>
+          </bean>
+        </beans>
+        在Chinese的类中有如下的方法
+
+         public class Chinese implements Person
+        {
+          private Dog dog;
+          // dog的setter方法
+          public void setGunDog(Dog dog)
+          {
+            this.dog = dog;
+          }
+          }
+        所以在匹配时，去掉set的后面方法名第一个首字母要小写，即gunDog,正好与上面的xml文件中的第二个bean的id一样，所以就匹配上了。
+ 2. byType规则
+byType规则是根据setter方法参数类型与Bean的类型进行匹配。假如A实例有setB(B b)方法，而Spring的配置文件中恰好有一个类型为B的Bean实例，容器为A注入匹配的Bean实例，如果容器中没有类型为B的实例，Spring不会调用setB()方法；但如果容器包含多于一个B的实例，程序将会抛出异常。
+
+            <?xml version="1.0" encoding="GBK"?>
+            <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xmlns="http://www.springframework.org/schema/beans"
+              xsi:schemaLocation="http://www.springframework.org/schema/beans
+              http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+              <!-- 指定使用byType策略，Spring会根据setter方法的参数类型与Bean的类型进行匹配 -->
+              <bean id="chinese" class="com.owen.app.service.impl.Chinese"
+                autowire="byType"/>
+            <!-- GunDog 实现子Dog的接口-->
+              <bean id="gunDog" class="com.owen.app.service.impl.GunDog">
+                <property name="name" value="wangwang"/>
+              </bean>
+              <!-- 配置petDog Bean，其实现类也实现了Dog接口，程序报错 -->
+              <bean id="petDog" class="com.owen.app.service.impl.PetDog"
+                autowire-candidate="false">
+                <property name="name" value="ohoh"/>
+              </bean>
+
+            </beans>       
+            降低了依赖关系的清晰性和透明性。所以不建议使用自动配置

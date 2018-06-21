@@ -1,0 +1,121 @@
+当某个Java 实例需要其他Java 实例时，系统自动提供所需要的实例，无需程序显示获取，这种自动提供java实例我们谓之为依赖注入，也可以称之为控制反转（Inversion of Control IoC）。
+在依赖注入/控制反转模式下，创建被调用者的工作不再是有调用者来完成，而是由Spring容器来完成，然后注入调用者
+  依赖注入通常有如下两种：
+
+         1、  设置注入：IoC容器使用属性的setter方法来注入被依赖的实例。
+
+         2、  构造注入：IoC容器使用构造器来注入被依赖的实例。
+   一、设值注入
+   public interface Person {
+	//定义使用斧子的方法
+	public void useAxe();
+}
+        Axe接口：
+
+public interface Axe {
+	//Axe接口里面有个砍的方法
+	public String chop();
+}
+
+          Person的实现类。
+
+public class Chinese implements Person {
+	private Axe axe;
+	private String name;
+
+	// 设值注入所需的setter方法
+	public void setAxe(Axe axe) {
+		this.axe = axe;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	// 实现Person接口的userAxe方法
+	public void useAxe() {
+		// 调用axe的chop方法，表明Person对象依赖于Axe对象
+		System.out.println("我是"+name+"用"+axe.chop());
+	}
+
+}
+
+   Axe的实现类：StoneAxe类
+
+public class StoneAxe implements Axe{
+
+	public String chop() {
+		return "石斧砍柴好慢啊!!!";
+	}
+
+}
+
+   对于本应用的XML配置文件如下：
+   <?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.springframework.org/schema/beans"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+	<!-- 配置Chinese实例，其实现类是Chinese -->
+	<bean id="chinese" class="com.spring.service.impl.Chinese">
+		<!-- 将StoneAxe注入给axe属性 -->
+		<property name="axe" ref="stoneAxe" />
+		<property name="name" value="孙悟空"/>
+	</bean>
+	
+	
+	<!-- 配置stoneAxe实例 -->
+	<bean id="stoneAxe" class="com.spring.service.impl.StoneAxe" />
+</beans>
+
+
+    测试程序：
+    public class BeanTest {
+	public static void main(String[] args) {
+		//创建Spring容器
+		ApplicationContext ctx = new ClassPathXmlApplicationContext("bean.xml");
+		//获取Chinese实例
+		Person person = ctx.getBean("chinese",Person.class);
+		person.useAxe();
+	}
+
+}
+
+    二、构造注入
+ Japanese类：
+
+public class Japanese implements Person{
+
+	private Axe axe;
+	//默认构造器
+	public Japanese(){
+		
+	}
+	
+	//构造注入所需的带参数构造器
+	public Japanese(Axe axe){
+		this.axe = axe;
+	}
+	
+	public void useAxe() {
+		System.out.println(axe.chop());
+	}
+ xml配置文件
+ <?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.springframework.org/schema/beans"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+	<!-- 配置Japanese实例 -->
+	<bean id="japanese" class="com.spring.service.impl.Japanese">
+		<!-- 使用构造注入 ，为Japanese实例注入SteelAxe实例-->
+		<constructor-arg ref="stoneAxe"/>
+	</bean>
+	
+	<!-- 配置stoneAxe实例 -->
+	<bean id="stoneAxe" class="com.spring.service.impl.StoneAxe" />
+</beans>
+
+建议用以设值注入为主，构造注入为辅的注入策略

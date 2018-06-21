@@ -1,0 +1,57 @@
+问题：如果客户端多次请求singleton Bean、并调用singleton Bean去调用prototype Bean的方法时，始终都是调用同一个prototype Bean实例
+两种思路：
+            ① 部分放弃依赖注入：singleton作用域Bean每次需要prototype作用域Bean时，主动向容器请求新的Bean实例，即可保证每次注入的prototype Bean实例都是最新的实例
+            ② 利用方法注入：通常使用lookup方法注入，利用lookup方法注入可以让Spring容器重写容器中Bean的抽象或具体方法，返回查找容器中其他Bean的结果，被查找的Bean通常是一个non-singleton Bean。Spring通过使用CGLIB库修改客户端的二进制码
+java代码：
+
+// 定义一个水果类
+public class Fruit {
+    public Fruit() {
+        System.out.println("I got Fruit");
+    }
+}
+
+// 苹果
+public class Apple extends Fruit {
+    public Apple() {
+        System.out.println("I got a fresh apple");
+    }
+}
+
+// 香蕉
+public class Bananer extends Fruit {
+    public Bananer () {
+        System.out.println("I got a  fresh bananer");
+    }
+}
+
+// 水果盘，可以拿到水果
+public abstract class FruitPlate{
+    // 抽象方法获取新鲜水果
+    protected abstract Fruit getFruit();
+}
+
+
+
+spring配置：
+
+<!-- 这是2个非单例模式的bean -->
+<bean id="apple" class="cn.com.willchen.test.di.Apple" scope="prototype"/>
+<bean id="bananer" class="cn.com.willchen.test.di.Bananer " scope="prototype"/>
+ 
+<bean id="fruitPlate1" class="cn.com.willchen.test.di.FruitPlate">
+    <lookup-method name="getFruit" bean="apple"/>
+</bean>
+<bean id="fruitPlate2" class="cn.com.willchen.test.di.FruitPlate">
+    <lookup-method name="getFruit" bean="bananer"/>
+</bean>
+测试
+public static void main(String[] args) {
+    ApplicationContext app = new ClassPathXmlApplicationContext("classpath:resource/applicationContext.xml");
+
+    FruitPlate fp1= (FruitPlate)app.getBean("fruitPlate1");
+    FruitPlate fp2 = (FruitPlate)app.getBean("fruitPlate2");
+
+    fp1.getFruit();
+    fp2.getFruit();
+}
